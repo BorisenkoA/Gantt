@@ -232,34 +232,27 @@ export function useBoard() {
 
 const addCrew = useCallback(async (name: string, anchorDate: string) => {
     const sb = getSupabase();
-    
-    // Тимчасовий id для локального стану (щобUI оновився миттєво)
-    const tempId = Date.now();
-    const newCrew: Crew = {
-      id: tempId,
-      name,
-      anchorDate,
-    };
+    if (!sb) return;
 
-    setState((s) => ({ ...s, crews: [...s.crews, newCrew] }));
+    skipNextRemote.current = true;
+    const { data, error } = await sb
+      .from("crews")
+      .insert({
+        name,
+        anchor_date: anchorDate,
+      })
+      .select()
+      .single();
 
-    if (sb) {
-      skipNextRemote.current = true;
-      // ЗАБИРАЄМО id звідси, бо база генерує його сама автоінкрементом
-      const { data, error } = await sb.from("crews").insert({
-        name: newCrew.name,
-        anchor_date: newCrew.anchorDate,
-      }).select().single();
-
-      if (error) {
-        console.error("Error adding crew:", error);
-      } else if (data) {
-        // Оновлюємо тимчасовий id на реальний, який повернула база (1, 5, 6 і т.д.)
-        setState((s) => ({
-          ...s,
-          crews: s.crews.map((c) => (c.id === tempId ? { ...c, id: Number(data.id) } : c)),
-        }));
-      }
+    if (error) {
+      console.error("Error adding crew:", error);
+    } else if (data) {
+      const newCrew: Crew = {
+        id: Number(data.id),
+        name: data.name,
+        anchorDate: data.anchor_date,
+      };
+      setState((s) => ({ ...s, crews: [...s.crews, newCrew] }));
     }
   }, []);
 
