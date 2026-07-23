@@ -132,7 +132,7 @@ export function ProjectCard({
           )}
 
           <span className="text-[10px] font-mono font-bold text-white bg-white/10 px-1.5 py-0.2 rounded border border-white/15 shrink-0 ml-0.5">
-            <span ref={badgeRef}>{project.duration}д</span>
+            <span ref={badgeRef}>{days.length}д</span>
           </span>
         </div>
       </div>
