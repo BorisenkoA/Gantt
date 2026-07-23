@@ -59,8 +59,17 @@ export function ProjectDialog({
     if (activeProject) {
       setName(activeProject.name || "");
       setPowerKw(activeProject.powerKw ? String(activeProject.powerKw) : "");
-      setDuration(activeProject.duration || 5);
-      setPauseDays(activeProject.pauseDays || 0);
+      // Захист від скидання одиниці завдяки перевірці на undefined/null замість ||
+      setDuration(
+        activeProject.duration !== undefined && activeProject.duration !== null
+          ? Number(activeProject.duration)
+          : 1
+      );
+      setPauseDays(
+        activeProject.pauseDays !== undefined && activeProject.pauseDays !== null
+          ? Number(activeProject.pauseDays)
+          : 0
+      );
       setCrewId(activeProject.crewId || defaultCrewId);
       setColor(activeProject.color || PRESET_COLORS[0]);
     } else {
@@ -80,9 +89,9 @@ export function ProjectDialog({
     onSave({
       ...(activeProject?.id ? { id: activeProject.id } : {}),
       name: name.trim(),
-      startDate: undefined, // Дати немає, працює чистий автокаскад
+      startDate: undefined,
       powerKw: powerKw ? Number(powerKw) : undefined,
-      duration: Math.max(1, Number(duration) || 5),
+      duration: Math.max(1, Number(duration) || 1),
       pauseDays: Math.max(0, Number(pauseDays) || 0),
       crewId: Number(crewId) || defaultCrewId,
       color,
@@ -158,7 +167,11 @@ export function ProjectDialog({
                   type="number"
                   min="1"
                   value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
+                  onChange={(e) =>
+                    setDuration(
+                      e.target.value === "" ? 1 : Number(e.target.value)
+                    )
+                  }
                   className="w-full bg-transparent text-center text-sm font-bold text-white focus:outline-none"
                 />
                 <button
@@ -187,7 +200,11 @@ export function ProjectDialog({
                   type="number"
                   min="0"
                   value={pauseDays}
-                  onChange={(e) => setPauseDays(Number(e.target.value))}
+                  onChange={(e) =>
+                    setPauseDays(
+                      e.target.value === "" ? 0 : Number(e.target.value)
+                    )
+                  }
                   className="w-full bg-transparent text-center text-sm font-bold text-white focus:outline-none"
                 />
                 <button
@@ -232,7 +249,9 @@ export function ProjectDialog({
                   onClick={() => setColor(c)}
                   style={{ backgroundColor: c }}
                   className={`w-7 h-7 rounded-full transition-transform ${
-                    color === c ? "scale-110 ring-2 ring-white" : "opacity-80 hover:opacity-100"
+                    color === c
+                      ? "scale-110 ring-2 ring-white"
+                      : "opacity-80 hover:opacity-100"
                   }`}
                 />
               ))}
