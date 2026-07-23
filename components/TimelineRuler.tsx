@@ -13,9 +13,9 @@ export function TimelineRuler({
   dayWidth: number;
   laneLabelWidth: number;
 }) {
-  const totalDays = daysBetween(rangeStart, rangeEnd);
+  const totalDays = calendarDaysBetween(rangeStart, rangeEnd);
   const today = new Date().toISOString().slice(0, 10);
-  const todayOffset = daysBetween(rangeStart, today);
+  const todayOffset = calendarDaysBetween(rangeStart, today);
 
   const ticks: { offset: number; label: string; isMonthStart: boolean }[] = [];
   for (let i = 0; i <= totalDays; i++) {
