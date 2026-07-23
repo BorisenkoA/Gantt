@@ -12,7 +12,8 @@ export function isSunday(dateStr: string): boolean {
  * Додає дні з урахуванням вихідних (неділя пропускається).
  */
 export function addWorkingDays(startDateStr: string, durationDays: number): string {
-  if (!startDateStr || durationDays <= 0) return startDateStr;
+  if (!startDateStr) return startDateStr;
+  const days = Math.max(1, durationDays); // Захист від 0 або мінусових днів
 
   let current = new Date(startDateStr);
   if (current.getDay() === 0) {
@@ -20,7 +21,7 @@ export function addWorkingDays(startDateStr: string, durationDays: number): stri
   }
 
   let added = 1;
-  while (added < durationDays) {
+  while (added < days) {
     current.setDate(current.getDate() + 1);
     if (current.getDay() !== 0) {
       added++;
@@ -70,7 +71,6 @@ export function computeSchedule(
     for (const project of crewProjects) {
       let startDate: string;
 
-      // ЗАВЖДИ вираховуємо дату автоматично (ігноруємо старі startDate з бази)
       if (prevEndWithPause) {
         const nextDay = addDays(prevEndWithPause, 1);
         startDate = isSunday(nextDay) ? addDays(nextDay, 1) : nextDay;
@@ -78,16 +78,17 @@ export function computeSchedule(
         startDate = isSunday(crew.anchorDate) ? addDays(crew.anchorDate, 1) : crew.anchorDate;
       }
 
-      // Розраховуємо кінцеву дату
-      const endDate = addWorkingDays(startDate, project.duration);
+      // Захищаємо тривалість, щоб навіть при 0 проєкт не ламався
+      const safeDuration = Math.max(1, Number(project.duration) || 1);
+      const endDate = addWorkingDays(startDate, safeDuration);
 
       scheduled.push({
         ...project,
-        startDate, // оновлена розрахована дата замість старої ручної
+        duration: safeDuration,
+        startDate,
         endDate,
       });
 
-      // Фіксуємо кінцеву точку для наступного елемента з урахуванням паузи
       const pauseDays = project.pauseDays || 0;
       prevEndWithPause = addDays(endDate, pauseDays);
     }
