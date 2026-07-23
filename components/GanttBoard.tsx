@@ -273,9 +273,9 @@ export function GanttBoard() {
           <div className="flex rounded-lg border border-grid bg-panel shadow-2xl">
             {/* 1. ФІКСОВАНА ЛІВА ПАНЕЛЬ БРИГАД */}
             <div className="w-64 shrink-0 border-r border-grid bg-panel z-20 flex flex-col">
-              <div className="border-b border-grid p-3 font-mono text-xs font-bold text-steel flex items-center justify-between bg-panel h-[53px]">
+              <div className="border-b border-grid px-4 font-mono text-xs font-bold text-steel flex items-center justify-between bg-panel h-[57px]">
                 <span>БРИГАДИ</span>
-                <span className="text-[10px] text-steel/60">36px / день</span>
+                <span className="text-[10px] text-steel/65">36px / день</span>
               </div>
 
               <div className="divide-y divide-grid flex-1">
@@ -363,25 +363,25 @@ export function GanttBoard() {
               }}
             >
               <div className="inline-block min-w-full">
-                {/* Шкала днів */}
-                <div className="flex border-b border-grid bg-panel/90">
+                {/* Шкала днів (фіксована висота h-[57px]) */}
+                <div className="flex border-b border-grid bg-panel/90 h-[57px]">
                   {(Array.isArray(dateRange) ? dateRange : []).map((d) => (
                     <div
                       key={d.iso}
                       style={{ width: DAY_WIDTH, minWidth: DAY_WIDTH }}
-                      className={`shrink-0 border-r border-grid/40 py-2 text-center text-xs font-mono transition-colors ${
+                      className={`shrink-0 border-r border-grid/40 py-1.5 text-center text-xs font-mono transition-colors flex flex-col justify-center ${
                         d.isWeekend
                           ? "bg-white/[0.05] text-amber-300 font-bold"
                           : "text-steel"
                       }`}
                     >
-                      <div className="text-[9px] uppercase font-bold text-steel/70">
+                      <div className="text-[9px] uppercase font-bold text-steel/70 leading-none">
                         {d.dayName}
                       </div>
-                      <div className="font-bold text-chalk text-xs my-0.5">
+                      <div className="font-bold text-chalk text-xs my-0.5 leading-tight">
                         {d.dayNum}
                       </div>
-                      <div className="text-[9px] text-steel/50">
+                      <div className="text-[9px] text-steel/50 leading-none">
                         {d.monthName}
                       </div>
                     </div>
