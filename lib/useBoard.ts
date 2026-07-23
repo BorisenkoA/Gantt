@@ -230,10 +230,13 @@ export function useBoard() {
     [persistCrews]
   );
 
-  const addCrew = useCallback(async (name: string, anchorDate: string) => {
+const addCrew = useCallback(async (name: string, anchorDate: string) => {
     const sb = getSupabase();
+    
+    // Тимчасовий id для локального стану (щобUI оновився миттєво)
+    const tempId = Date.now();
     const newCrew: Crew = {
-      id: Date.now(),
+      id: tempId,
       name,
       anchorDate,
     };
@@ -242,12 +245,21 @@ export function useBoard() {
 
     if (sb) {
       skipNextRemote.current = true;
-      const { error } = await sb.from("crews").insert({
-        id: newCrew.id,
+      // ЗАБИРАЄМО id звідси, бо база генерує його сама автоінкрементом
+      const { data, error } = await sb.from("crews").insert({
         name: newCrew.name,
         anchor_date: newCrew.anchorDate,
-      });
-      if (error) console.error("Error adding crew:", error);
+      }).select().single();
+
+      if (error) {
+        console.error("Error adding crew:", error);
+      } else if (data) {
+        // Оновлюємо тимчасовий id на реальний, який повернула база (1, 5, 6 і т.д.)
+        setState((s) => ({
+          ...s,
+          crews: s.crews.map((c) => (c.id === tempId ? { ...c, id: Number(data.id) } : c)),
+        }));
+      }
     }
   }, []);
 
