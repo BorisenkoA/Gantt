@@ -1,6 +1,6 @@
 "use client";
 
-import { addDays, daysBetween } from "@/lib/scheduler";
+import { addDays, calendarDaysBetween } from "@/lib/scheduler";
 
 export function TimelineRuler({
   rangeStart,
