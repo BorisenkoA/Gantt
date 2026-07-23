@@ -37,7 +37,8 @@ export function ProjectCard({
   const curr = new Date(project.startDate);
   const end = new Date(project.endDate);
 
-  while (curr < end) {
+  // Використовуємо <=, щоб для 1 дня цикл спрацював хоча б 1 раз
+  while (curr <= end) {
     days.push({
       iso: curr.toISOString().split("T")[0],
       isSunday: curr.getDay() === 0,
@@ -45,7 +46,8 @@ export function ProjectCard({
     curr.setDate(curr.getDate() + 1);
   }
 
-  const initialCardWidth = days.length * dayWidth;
+  // Гарантуємо мінімальну ширину у 1 повну клітинку для 1 дня
+  const initialCardWidth = Math.max(dayWidth, days.length * dayWidth);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -53,7 +55,7 @@ export function ProjectCard({
     opacity: isDragging ? 0.3 : 1,
   };
 
-function handleResizePointerDown(e: React.PointerEvent) {
+  function handleResizePointerDown(e: React.PointerEvent) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -68,7 +70,6 @@ function handleResizePointerDown(e: React.PointerEvent) {
       moveEvent.stopPropagation();
       const deltaX = moveEvent.clientX - startX;
       
-      // Додаємо зсув на половину дня, щоб зміна відбувалася чітко на серединах клітинок
       const dayDelta = Math.floor((deltaX + dayWidth / 2) / dayWidth);
       const nextDays = Math.max(1, initialDays + dayDelta);
       const targetWidth = nextDays * dayWidth;
@@ -113,7 +114,6 @@ function handleResizePointerDown(e: React.PointerEvent) {
     <div
       ref={setNodeRef}
       style={style}
-      // Збільшено відступ зверху до mt-6 для ще більшого зазору від верхнього календаря
       className="relative flex items-center shrink-0 group select-none z-10 hover:z-30 my-auto mt-10 p-0 m-0"
     >
       {/* 🏷️ НАЗВА, КВТ ТА КІЛЬКІСТЬ ДНІВ ЗВЕРХУ */}
