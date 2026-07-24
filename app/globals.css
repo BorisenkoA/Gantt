@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-900 dark:bg-ink dark:text-chalk transition-colors;
+  }
+}
+
 html, body {
   height: 100%;
   background-color: #10151C;

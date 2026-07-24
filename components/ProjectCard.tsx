@@ -110,7 +110,7 @@ export function ProjectCard({
     >
       {/* 🏷️ НАЗВА, КВТ ТА КІЛЬКІСТЬ ДНІВ ЗВЕРХУ */}
       <div className="absolute -top-10 left-0 z-20 pointer-events-none max-w-[420px]">
-        <div className="inline-flex items-center gap-1.5 rounded-md bg-slate-900/95 backdrop-blur-xs px-2 py-0.5 text-[11px] font-semibold text-white shadow-lg border border-white/10 whitespace-nowrap truncate">
+        <div className="inline-flex items-center gap-1.5 rounded-md bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xs px-2 py-0.5 text-[11px] font-semibold text-white shadow-lg border border-white/10 whitespace-nowrap truncate">
           <span
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: project.color }}
@@ -132,6 +132,7 @@ export function ProjectCard({
       {/* ОСНОВНА КАРТКА ПРОЄКТУ */}
       <div
         ref={cardRef}
+        data-project-card="true"
         onDoubleClick={() => {
           if (!isDragging && !isResizingRef.current) {
             onEdit(project.id);
@@ -143,31 +144,17 @@ export function ProjectCard({
         }}
         className={`relative flex h-10 items-center justify-between rounded-l-md ${
           pauseDays > 0 ? "rounded-r-none" : "rounded-r-md"
-        } text-xs font-medium text-ink shadow-sm transition-colors hover:brightness-105 shrink-0 overflow-hidden`}
+        } text-xs font-medium text-ink shadow-sm transition-colors hover:brightness-105 shrink-0 overflow-hidden cursor-pointer`}
         title="Двічі клікніть, щоб відкрити редагування"
       >
-        {/* 🖐️ РУЧКА ДЛЯ ПЕРЕТЯГУВАННЯ */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="drag-handle absolute left-0 top-0 bottom-0 w-6 bg-black/20 hover:bg-black/35 cursor-grab active:cursor-grabbing flex items-center justify-center z-20 transition-colors"
-          title="Затисніть, щоб перетягнути проєкт"
-        >
-          <div className="flex flex-col gap-0.5 pointer-events-none">
-            <div className="w-1 h-1 rounded-full bg-ink/80" />
-            <div className="w-1 h-1 rounded-full bg-ink/80" />
-            <div className="w-1 h-1 rounded-full bg-ink/80" />
-          </div>
-        </div>
-
-        {/* ФОНОВІ БЛОКИ ДНІВ З ВИДІЛЕННЯМ НЕДІЛІ (ВИХ) */}
-        <div className="absolute inset-0 flex pointer-events-none z-0 pl-6">
+        {/* ФОНОВІ БЛОКИ ДНІВ (ПОЧИНАЮТЬСЯ РІВНО З ПЕРШОГО ПІКСЕЛЯ) */}
+        <div className="absolute inset-0 flex pointer-events-none z-0">
           {days.map((d, i) =>
             d.isSunday ? (
               <div
                 key={i}
                 style={{ width: `${dayWidth}px` }}
-                className="h-full bg-slate-950/45 border-x border-black/20 flex flex-col items-center justify-center relative overflow-hidden"
+                className="h-full bg-slate-950/45 dark:bg-slate-950/45 border-x border-black/20 flex flex-col items-center justify-center relative overflow-hidden"
               >
                 <div
                   className="absolute inset-0 opacity-25"
@@ -189,6 +176,20 @@ export function ProjectCard({
           )}
         </div>
 
+        {/* 🖐️ РУЧКА ДЛЯ ПЕРЕТЯГУВАННЯ (НАКЛАДАТЬСЯ ПОВЕРХ ЗЛІВА) */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="drag-handle absolute left-0 top-0 bottom-0 w-5 bg-black/25 hover:bg-black/45 cursor-grab active:cursor-grabbing flex items-center justify-center z-30 transition-colors rounded-l-md"
+          title="Затисніть, щоб перетягнути проєкт"
+        >
+          <div className="flex flex-col gap-0.5 pointer-events-none">
+            <div className="w-1 h-1 rounded-full bg-white/90" />
+            <div className="w-1 h-1 rounded-full bg-white/90" />
+            <div className="w-1 h-1 rounded-full bg-white/90" />
+          </div>
+        </div>
+
         {/* ↔ ЗОНА РЕСАЙЗУ СПРАВА */}
         <div
           onPointerDown={handleResizePointerDown}
@@ -205,10 +206,10 @@ export function ProjectCard({
       {pauseDays > 0 && (
         <div
           style={{ width: `${pauseWidth}px` }}
-          className="relative h-10 flex items-center justify-center border-y border-r border-dashed border-steel/50 bg-steel/10 text-[10px] text-chalk font-mono font-medium rounded-r-md overflow-hidden shrink-0"
+          className="relative h-10 flex items-center justify-center border-y border-r border-dashed border-slate-300 dark:border-steel/50 bg-slate-200/60 dark:bg-steel/10 text-[10px] text-slate-700 dark:text-chalk font-mono font-medium rounded-r-md overflow-hidden shrink-0"
         >
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_25%,rgba(255,255,255,0.05)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.05)_75%)] bg-[length:8px_8px]" />
-          <span className="relative z-10 flex items-center gap-1 opacity-95 px-1 truncate">
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(0,0,0,0.06)_25%,rgba(0,0,0,0.06)_50%,transparent_50%,transparent_75%,rgba(0,0,0,0.06)_75%)] dark:bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_25%,rgba(255,255,255,0.05)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.05)_75%)] bg-[length:8px_8px]" />
+          <span className="relative z-10 flex items-center gap-1 opacity-95 px-1 truncate font-semibold">
             ⏸ {pauseWidth >= 35 ? `${pauseDays}д` : ""}
           </span>
         </div>

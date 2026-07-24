@@ -29,13 +29,13 @@ import {
 import { ProjectCard } from "./ProjectCard";
 import { ProjectDialog, DialogMode } from "./ProjectDialog";
 import { CrewDialog, CrewDialogMode } from "./CrewDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const DAY_WIDTH = 36; // Ширина одного календарного дня у пікселях
 
 // ---------------------------------------------------------------------------
 // ДОРІЖКА БРИГАДИ — droppable-зона на всю ширину таймлайну,
 // яка ще й реєструє свій DOM-вузол у мапі рефів для точного розрахунку позиції
-// ---------------------------------------------------------------------------
 function Lane({
   crewId,
   totalWidth,
@@ -55,8 +55,10 @@ function Lane({
         setNodeRef(el);
         registerRef(crewId, el);
       }}
-      className={`flex items-center h-[96px] relative transition-colors ${
-        isOver ? "bg-cyan/5" : ""
+      className={`flex items-center h-[96px] relative transition-colors border-b border-slate-300 dark:border-grid ${
+        isOver 
+          ? "bg-cyan-100 dark:bg-cyan/20 border-cyan-400 dark:border-cyan" 
+          : "bg-white dark:bg-transparent"
       }`}
       style={{ minWidth: `${totalWidth}px` }}
     >
@@ -341,7 +343,7 @@ export function GanttBoard() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-steel font-mono text-sm">
+      <div className="flex h-64 items-center justify-center text-slate-500 dark:text-steel font-mono text-sm bg-white dark:bg-ink">
         Завантаження графіка...
       </div>
     );
@@ -350,36 +352,37 @@ export function GanttBoard() {
   const activeProject = scheduled.find((p) => p.id === activeId);
 
   return (
-    <div className="flex flex-col h-full bg-ink text-chalk select-none">
+    <div className="flex flex-col h-full bg-slate-100 dark:bg-ink text-slate-900 dark:text-chalk select-none transition-colors">
       {/* ВЕРХНЯ ПАНЕЛЬ */}
-      <div className="flex items-center justify-between border-b border-grid px-6 py-3 bg-panel/50">
+      <div className="flex items-center justify-between border-b border-slate-300 dark:border-grid px-6 py-3 bg-white dark:bg-panel/50 backdrop-blur-sm transition-colors shadow-xs">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold font-display text-chalk flex items-center gap-2">
+          <h1 className="text-lg font-bold font-display text-slate-900 dark:text-chalk flex items-center gap-2">
             Графік монтажів СЕС
           </h1>
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
               connected
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
             }`}
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
-                connected ? "bg-emerald-400" : "bg-amber-400"
+                connected ? "bg-emerald-600 dark:bg-emerald-400" : "bg-amber-600 dark:bg-amber-400"
               }`}
             />
             {connected ? "Supabase Active" : "Local Mode"}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
           <button
             onClick={() => setCrewDialog({ kind: "add" })}
-            className="flex items-center gap-1.5 rounded-md bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-chalk border border-white/10 transition"
+            className="flex items-center gap-1.5 rounded-md bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-chalk border border-slate-300 dark:border-white/10 transition shadow-xs"
           >
             <Plus size={14} />
-            <Users size={14} className="text-cyan" />
+            <Users size={14} className="text-cyan-600 dark:text-cyan" />
             Додати бригаду
           </button>
         </div>
@@ -393,15 +396,15 @@ export function GanttBoard() {
         onDragEnd={handleDragEnd}
       >
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="flex rounded-lg border border-grid bg-panel shadow-2xl">
+          <div className="flex rounded-lg border-2 border-slate-300 dark:border-grid bg-white dark:bg-panel shadow-xl transition-colors overflow-hidden">
             {/* 1. ФІКСОВАНА ЛІВА ПАНЕЛЬ БРИГАД */}
-            <div className="w-64 shrink-0 border-r border-grid bg-panel z-20 flex flex-col">
-              <div className="border-b border-grid px-4 font-mono text-xs font-bold text-steel flex items-center justify-between bg-panel h-[57px]">
+            <div className="w-64 shrink-0 border-r-2 border-slate-300 dark:border-grid bg-slate-50 dark:bg-panel z-20 flex flex-col transition-colors">
+              <div className="border-b-2 border-slate-300 dark:border-grid px-4 font-mono text-xs font-bold text-slate-600 dark:text-steel flex items-center justify-between bg-slate-100 dark:bg-panel h-[57px]">
                 <span>БРИГАДИ</span>
-                <span className="text-[10px] text-steel/65">36px / день</span>
+                <span className="text-[10px] text-slate-500 dark:text-steel/65">36px / день</span>
               </div>
 
-              <div className="divide-y divide-grid flex-1">
+              <div className="divide-y divide-slate-300 dark:divide-grid flex-1">
                 {crews.map((crew) => {
                   const crewProjects = scheduled.filter(
                     (p) => p.crewId === crew.id
@@ -414,42 +417,45 @@ export function GanttBoard() {
                   return (
                     <div
                       key={crew.id}
-                      className="p-4 bg-panel flex items-center justify-between h-[96px]"
+                      className="p-4 bg-white dark:bg-panel flex items-center justify-between h-[96px] transition-colors border-b border-slate-300 dark:border-grid"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-chalk">
+                          <span className="font-bold text-sm text-slate-900 dark:text-chalk">
                             {crew.name}
                           </span>
                           <button
                             onClick={() =>
                               setCrewDialog({ kind: "edit", crew })
                             }
-                            className="text-steel hover:text-cyan transition-colors p-1 rounded hover:bg-white/5"
+                            className="text-slate-500 dark:text-steel hover:text-cyan-600 dark:hover:text-cyan transition-colors p-1 rounded hover:bg-slate-200 dark:hover:bg-white/5"
                             title="Редагувати бригаду"
                           >
                             <Edit2 size={13} />
                           </button>
                         </div>
-                        <div className="mt-1 flex items-center gap-2 text-xs font-mono text-steel">
-                          <span>Старт: {crew.anchorDate}</span>
-                          {totalPower > 0 && (
-                            <span className="text-amber-400 font-bold flex items-center gap-0.5">
-                              <Zap size={11} /> {totalPower} кВт
-                            </span>
-                          )}
-                        </div>
+<div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-steel">
+  <span className="whitespace-nowrap font-mono">
+    Старт: <strong className="text-slate-900 dark:text-chalk">{crew.anchorDate}</strong>
+  </span>
+  
+  {totalPower > 0 && (
+    <span className="text-amber-700 dark:text-amber-400 font-bold flex items-center gap-0.5 whitespace-nowrap bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+      <Zap size={11} /> {totalPower} кВт
+    </span>
+  )}
+</div>
                       </div>
 
-                      <button
-                        onClick={() =>
-                          setProjectDialog({ kind: "add", crewId: crew.id })
-                        }
-                        className="p-1.5 rounded-md bg-grid/40 hover:bg-cyan/20 text-steel hover:text-cyan transition-colors"
-                        title="Додати проєкт для цієї бригади"
-                      >
-                        <Plus size={16} />
-                      </button>
+<button
+  onClick={() =>
+    setProjectDialog({ kind: "add", crewId: crew.id })
+  }
+  className="p-1.5 rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-grid/40 dark:hover:bg-cyan/20 text-slate-700 hover:text-slate-900 dark:text-steel dark:hover:text-cyan transition-colors border border-slate-300 dark:border-transparent"
+  title="Додати проєкт для цієї бригади"
+>
+  <Plus size={16} />
+</button>
                     </div>
                   );
                 })}
@@ -458,7 +464,7 @@ export function GanttBoard() {
 
             {/* 2. ПРАВА СКРОЛЕНА ЧАСТИНА (З ПІДТРИМКОЮ ПЕРЕТЯГУВАННЯ МИШЕЮ) */}
             <div
-              className="flex-1 overflow-x-auto cursor-grab active:cursor-grabbing select-none"
+              className="flex-1 overflow-x-auto cursor-grab active:cursor-grabbing select-none bg-white dark:bg-panel"
               onPointerDown={(e) => {
                 const target = e.target as HTMLElement;
                 if (
@@ -488,24 +494,24 @@ export function GanttBoard() {
             >
               <div className="inline-block min-w-full">
                 {/* Шкала днів (фіксована висота h-[57px]) */}
-                <div className="flex border-b border-grid bg-panel/90 h-[57px]">
+                <div className="flex border-b-2 border-slate-300 dark:border-grid bg-slate-100 dark:bg-panel/90 h-[57px] transition-colors">
                   {(Array.isArray(dateRange) ? dateRange : []).map((d) => (
                     <div
                       key={d.iso}
                       style={{ width: DAY_WIDTH, minWidth: DAY_WIDTH }}
-                      className={`shrink-0 border-r border-grid/40 py-1.5 text-center text-xs font-mono transition-colors flex flex-col justify-center ${
+                      className={`shrink-0 border-r border-slate-300 dark:border-grid/40 py-1.5 text-center text-xs font-mono transition-colors flex flex-col justify-center ${
                         d.isWeekend
-                          ? "bg-white/[0.05] text-amber-300 font-bold"
-                          : "text-steel"
+                          ? "bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold"
+                          : "text-slate-600 dark:text-steel"
                       }`}
                     >
-                      <div className="text-[9px] uppercase font-bold text-steel/70 leading-none">
+                      <div className="text-[9px] uppercase font-bold text-slate-500 dark:text-steel/70 leading-none">
                         {d.dayName}
                       </div>
-                      <div className="font-bold text-chalk text-xs my-0.5 leading-tight">
+                      <div className="font-bold text-slate-900 dark:text-chalk text-xs my-0.5 leading-tight">
                         {d.dayNum}
                       </div>
-                      <div className="text-[9px] text-steel/50 leading-none">
+                      <div className="text-[9px] text-slate-500 dark:text-steel/50 leading-none">
                         {d.monthName}
                       </div>
                     </div>
@@ -513,7 +519,7 @@ export function GanttBoard() {
                 </div>
 
                 {/* Доріжки проєктів праворуч — droppable-зони з реєстрацією рефів */}
-                <div className="divide-y divide-grid">
+                <div className="divide-y divide-slate-300 dark:divide-grid">
                   {crews.map((crew) => {
                     const crewProjects = scheduled.filter(
                       (p) => p.crewId === crew.id
