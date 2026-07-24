@@ -71,13 +71,8 @@ export function ProjectCard({
       const nextDays = Math.max(1, initialDays + dayDelta);
       const targetWidth = nextDays * dayWidth;
 
-      if (cardEl) {
-        cardEl.style.width = `${targetWidth}px`;
-      }
-
-      if (badgeEl) {
-        badgeEl.innerText = `${nextDays}д`;
-      }
+      if (cardEl) cardEl.style.width = `${targetWidth}px`;
+      if (badgeEl) badgeEl.innerText = `${nextDays}д`;
     }
 
     function onPointerUp(upEvent: PointerEvent) {
@@ -135,28 +130,38 @@ export function ProjectCard({
       </div>
 
       {/* ОСНОВНА КАРТКА ПРОЄКТУ */}
-      {/* ⬇️ ДОДАНО КЛАС "no-dnd", ЩОБ БАТЬКІВСЬКИЙ PAN-SCROLL НЕ ПЕРЕХОПЛЮВАВ ПОДІЮ */}
       <div
         ref={cardRef}
-        {...attributes}
-        {...listeners}
-        onClick={(e) => {
-          if (isResizingRef.current || (window as any).__recentlyResized) {
-            e.stopPropagation();
-            return;
+        onDoubleClick={() => {
+          if (!isDragging && !isResizingRef.current) {
+            onEdit(project.id);
           }
-          onEdit(project.id);
         }}
         style={{
           width: `${initialCardWidth}px`,
           backgroundColor: project.color,
         }}
-        className={`no-dnd relative flex h-10 items-center justify-between rounded-l-md ${
+        className={`relative flex h-10 items-center justify-between rounded-l-md ${
           pauseDays > 0 ? "rounded-r-none" : "rounded-r-md"
-        } text-xs font-medium text-ink shadow-sm transition-colors hover:brightness-105 active:cursor-grabbing shrink-0 overflow-hidden touch-none`}
+        } text-xs font-medium text-ink shadow-sm transition-colors hover:brightness-105 shrink-0 overflow-hidden`}
+        title="Двічі клікніть, щоб відкрити редагування"
       >
+        {/* 🖐️ РУЧКА ДЛЯ ПЕРЕТЯГУВАННЯ */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="drag-handle absolute left-0 top-0 bottom-0 w-6 bg-black/20 hover:bg-black/35 cursor-grab active:cursor-grabbing flex items-center justify-center z-20 transition-colors"
+          title="Затисніть, щоб перетягнути проєкт"
+        >
+          <div className="flex flex-col gap-0.5 pointer-events-none">
+            <div className="w-1 h-1 rounded-full bg-ink/80" />
+            <div className="w-1 h-1 rounded-full bg-ink/80" />
+            <div className="w-1 h-1 rounded-full bg-ink/80" />
+          </div>
+        </div>
+
         {/* ФОНОВІ БЛОКИ ДНІВ З ВИДІЛЕННЯМ НЕДІЛІ (ВИХ) */}
-        <div className="absolute inset-0 flex pointer-events-none z-0">
+        <div className="absolute inset-0 flex pointer-events-none z-0 pl-6">
           {days.map((d, i) =>
             d.isSunday ? (
               <div
@@ -184,21 +189,15 @@ export function ProjectCard({
           )}
         </div>
 
-        <div className="relative z-10 w-full pointer-events-none" />
-
-        {/* ↔ ЗОНА РЕСАЙЗУ */}
+        {/* ↔ ЗОНА РЕСАЙЗУ СПРАВА */}
         <div
           onPointerDown={handleResizePointerDown}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-          className={`no-dnd absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center group/handle ${
+          className={`resize-handle absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize flex items-center justify-center group/handle ${
             pauseDays > 0 ? "rounded-r-none" : "rounded-r-md"
-          } z-30 hover:bg-black/25 active:bg-black/40 transition-colors touch-none`}
+          } z-30 hover:bg-black/25 active:bg-black/40 transition-colors`}
           title="Тягніть вбік, щоб змінити кількість днів"
         >
-          <div className="w-0.5 h-4 rounded-full bg-black/40 group-hover/handle:bg-chalk transition-colors" />
+          <div className="w-0.5 h-4 rounded-full bg-black/40 group-hover/handle:bg-chalk transition-colors pointer-events-none" />
         </div>
       </div>
 
@@ -209,7 +208,7 @@ export function ProjectCard({
           className="relative h-10 flex items-center justify-center border-y border-r border-dashed border-steel/50 bg-steel/10 text-[10px] text-chalk font-mono font-medium rounded-r-md overflow-hidden shrink-0"
         >
           <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_25%,rgba(255,255,255,0.05)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.05)_75%)] bg-[length:8px_8px]" />
-          <span className="relative z-10 flex items-center gap-1 opacity-90 px-1 truncate">
+          <span className="relative z-10 flex items-center gap-1 opacity-95 px-1 truncate">
             ⏸ {pauseWidth >= 35 ? `${pauseDays}д` : ""}
           </span>
         </div>
