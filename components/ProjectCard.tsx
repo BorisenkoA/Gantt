@@ -172,7 +172,7 @@ export function ProjectCard({
                 style={{ width: `${dayWidth}px` }}
                 className="h-full border-r border-black/5"
               />
-            )
+            ),
           )}
         </div>
 

@@ -56,8 +56,8 @@ function Lane({
         registerRef(crewId, el);
       }}
       className={`flex items-center h-[96px] relative transition-colors border-b border-slate-300 dark:border-grid ${
-        isOver 
-          ? "bg-cyan-100 dark:bg-cyan/20 border-cyan-400 dark:border-cyan" 
+        isOver
+          ? "bg-cyan-100 dark:bg-cyan/20 border-cyan-400 dark:border-cyan"
           : "bg-white dark:bg-transparent"
       }`}
       style={{ minWidth: `${totalWidth}px` }}
@@ -75,14 +75,14 @@ const collisionDetection: CollisionDetection = (args) => {
   const pointerCollisions = pointerWithin(args);
 
   const cardCollisions = pointerCollisions.filter(
-    (c) => !String(c.id).startsWith("lane-")
+    (c) => !String(c.id).startsWith("lane-"),
   );
   if (cardCollisions.length > 0) {
     return cardCollisions;
   }
 
   const laneCollisions = pointerCollisions.filter((c) =>
-    String(c.id).startsWith("lane-")
+    String(c.id).startsWith("lane-"),
   );
   if (laneCollisions.length > 0) {
     return laneCollisions;
@@ -120,7 +120,7 @@ export function GanttBoard() {
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
 
   const scheduled = computeSchedule(crews, projects);
@@ -139,7 +139,7 @@ export function GanttBoard() {
   function computeDropIndex(
     targetCrewId: number,
     pointerX: number,
-    activeProjectId: string
+    activeProjectId: string,
   ) {
     const laneScheduled = scheduled
       .filter((p) => p.crewId === targetCrewId && p.id !== activeProjectId)
@@ -197,7 +197,7 @@ export function GanttBoard() {
                   powerKw: data.powerKw,
                   startDate: data.startDate,
                 }
-              : p
+              : p,
           );
         }
 
@@ -243,7 +243,7 @@ export function GanttBoard() {
 
   function handleResizeCommit(id: string, newDuration: number) {
     updateProjects((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, duration: newDuration } : p))
+      prev.map((p) => (p.id === id ? { ...p, duration: newDuration } : p)),
     );
   }
 
@@ -266,8 +266,8 @@ export function GanttBoard() {
         prev.map((c) =>
           c.id === data.id
             ? { ...c, name: data.name, anchorDate: data.anchorDate }
-            : c
-        )
+            : c,
+        ),
       );
     } else {
       addCrew(data.name, data.anchorDate);
@@ -319,7 +319,7 @@ export function GanttBoard() {
       targetIndex = computeDropIndex(
         targetCrewId,
         pointerX,
-        active.id as string
+        active.id as string,
       );
     } else {
       const laneProjects = projects.filter((p) => p.crewId === targetCrewId);
@@ -368,7 +368,9 @@ export function GanttBoard() {
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
-                connected ? "bg-emerald-600 dark:bg-emerald-400" : "bg-amber-600 dark:bg-amber-400"
+                connected
+                  ? "bg-emerald-600 dark:bg-emerald-400"
+                  : "bg-amber-600 dark:bg-amber-400"
               }`}
             />
             {connected ? "Supabase Active" : "Local Mode"}
@@ -401,17 +403,19 @@ export function GanttBoard() {
             <div className="w-64 shrink-0 border-r-2 border-slate-300 dark:border-grid bg-slate-50 dark:bg-panel z-20 flex flex-col transition-colors">
               <div className="border-b-2 border-slate-300 dark:border-grid px-4 font-mono text-xs font-bold text-slate-600 dark:text-steel flex items-center justify-between bg-slate-100 dark:bg-panel h-[57px]">
                 <span>БРИГАДИ</span>
-                <span className="text-[10px] text-slate-500 dark:text-steel/65">36px / день</span>
+                <span className="text-[10px] text-slate-500 dark:text-steel/65">
+                  36px / день
+                </span>
               </div>
 
               <div className="divide-y divide-slate-300 dark:divide-grid flex-1">
                 {crews.map((crew) => {
                   const crewProjects = scheduled.filter(
-                    (p) => p.crewId === crew.id
+                    (p) => p.crewId === crew.id,
                   );
                   const totalPower = crewProjects.reduce(
                     (sum, p) => sum + (p.powerKw || 0),
-                    0
+                    0,
                   );
 
                   return (
@@ -434,28 +438,31 @@ export function GanttBoard() {
                             <Edit2 size={13} />
                           </button>
                         </div>
-<div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-steel">
-  <span className="whitespace-nowrap font-mono">
-    Старт: <strong className="text-slate-900 dark:text-chalk">{crew.anchorDate}</strong>
-  </span>
-  
-  {totalPower > 0 && (
-    <span className="text-amber-700 dark:text-amber-400 font-bold flex items-center gap-0.5 whitespace-nowrap bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
-      <Zap size={11} /> {totalPower} кВт
-    </span>
-  )}
-</div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-steel">
+                          <span className="whitespace-nowrap font-mono">
+                            Старт:{" "}
+                            <strong className="text-slate-900 dark:text-chalk">
+                              {crew.anchorDate}
+                            </strong>
+                          </span>
+
+                          {totalPower > 0 && (
+                            <span className="text-amber-700 dark:text-amber-400 font-bold flex items-center gap-0.5 whitespace-nowrap bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                              <Zap size={11} /> {totalPower} кВт
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-<button
-  onClick={() =>
-    setProjectDialog({ kind: "add", crewId: crew.id })
-  }
-  className="p-1.5 rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-grid/40 dark:hover:bg-cyan/20 text-slate-700 hover:text-slate-900 dark:text-steel dark:hover:text-cyan transition-colors border border-slate-300 dark:border-transparent"
-  title="Додати проєкт для цієї бригади"
->
-  <Plus size={16} />
-</button>
+                      <button
+                        onClick={() =>
+                          setProjectDialog({ kind: "add", crewId: crew.id })
+                        }
+                        className="p-1.5 rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-grid/40 dark:hover:bg-cyan/20 text-slate-700 hover:text-slate-900 dark:text-steel dark:hover:text-cyan transition-colors border border-slate-300 dark:border-transparent"
+                        title="Додати проєкт для цієї бригади"
+                      >
+                        <Plus size={16} />
+                      </button>
                     </div>
                   );
                 })}
@@ -522,7 +529,7 @@ export function GanttBoard() {
                 <div className="divide-y divide-slate-300 dark:divide-grid">
                   {crews.map((crew) => {
                     const crewProjects = scheduled.filter(
-                      (p) => p.crewId === crew.id
+                      (p) => p.crewId === crew.id,
                     );
 
                     return (
@@ -544,7 +551,7 @@ export function GanttBoard() {
                               const offsetDays = firstDayIso
                                 ? calendarDaysBetween(
                                     firstDayIso,
-                                    project.startDate
+                                    project.startDate,
                                   )
                                 : 0;
                               marginLeft = Math.max(0, offsetDays) * DAY_WIDTH;
@@ -563,7 +570,7 @@ export function GanttBoard() {
                                   dayWidth={DAY_WIDTH}
                                   onEdit={(id: string) => {
                                     const p = projects.find(
-                                      (item) => item.id === id
+                                      (item) => item.id === id,
                                     );
                                     if (p)
                                       setProjectDialog({
