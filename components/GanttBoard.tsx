@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
+  closestCenter,
   useSensor,
   useSensors,
+  useDroppable,
   DragStartEvent,
   DragEndEvent,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -28,6 +32,63 @@ import { CrewDialog, CrewDialogMode } from "./CrewDialog";
 
 const DAY_WIDTH = 36; // Ширина одного календарного дня у пікселях
 
+// ---------------------------------------------------------------------------
+// ДОРІЖКА БРИГАДИ — droppable-зона на всю ширину таймлайну,
+// яка ще й реєструє свій DOM-вузол у мапі рефів для точного розрахунку позиції
+// ---------------------------------------------------------------------------
+function Lane({
+  crewId,
+  totalWidth,
+  registerRef,
+  children,
+}: {
+  crewId: number;
+  totalWidth: number;
+  registerRef: (crewId: number, el: HTMLDivElement | null) => void;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `lane-${crewId}` });
+
+  return (
+    <div
+      ref={(el) => {
+        setNodeRef(el);
+        registerRef(crewId, el);
+      }}
+      className={`flex items-center h-[96px] relative transition-colors ${
+        isOver ? "bg-cyan/5" : ""
+      }`}
+      style={{ minWidth: `${totalWidth}px` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// КАСТОМНА ЛОГІКА ВИЗНАЧЕННЯ "OVER": картки мають ПРІОРИТЕТ над доріжкою
+// (потрібно лише щоб визначити ЦІЛЬОВУ БРИГАДУ, індекс рахується окремо)
+// ---------------------------------------------------------------------------
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+
+  const cardCollisions = pointerCollisions.filter(
+    (c) => !String(c.id).startsWith("lane-")
+  );
+  if (cardCollisions.length > 0) {
+    return cardCollisions;
+  }
+
+  const laneCollisions = pointerCollisions.filter((c) =>
+    String(c.id).startsWith("lane-")
+  );
+  if (laneCollisions.length > 0) {
+    return laneCollisions;
+  }
+
+  return closestCenter(args);
+};
+
 export function GanttBoard() {
   const {
     crews,
@@ -45,6 +106,13 @@ export function GanttBoard() {
   const [projectDialog, setProjectDialog] = useState<DialogMode | null>(null);
   const [crewDialog, setCrewDialog] = useState<CrewDialogMode | null>(null);
 
+  // ⬇️ Мапа реальних DOM-вузлів кожної доріжки, щоб рахувати позицію
+  //    незалежно від того, над карткою чи над доріжкою спрацював "over"
+  const laneRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  function registerLaneRef(crewId: number, el: HTMLDivElement | null) {
+    laneRefs.current[crewId] = el;
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -55,6 +123,45 @@ export function GanttBoard() {
 
   const scheduled = computeSchedule(crews, projects);
   const dateRange = getDateRange(scheduled);
+  const totalTimelineWidth =
+    (Array.isArray(dateRange) ? dateRange.length : 0) * DAY_WIDTH;
+
+  // ---------------------------------------------------------------------------
+  // Розрахунок індексу вставки за РЕАЛЬНОЮ піксельною позицією курсора
+  // відносно лівого краю ЦІЛЬОВОЇ доріжки (а не картки, над якою опинились)
+  // ---------------------------------------------------------------------------
+  function getProjectPixelWidth(p: { duration: number; pauseDays?: number }) {
+    return (p.duration + (p.pauseDays || 0)) * DAY_WIDTH;
+  }
+
+  function computeDropIndex(
+    targetCrewId: number,
+    pointerX: number,
+    activeProjectId: string
+  ) {
+    const laneScheduled = scheduled
+      .filter((p) => p.crewId === targetCrewId && p.id !== activeProjectId)
+      .sort((a, b) => a.position - b.position);
+
+    if (laneScheduled.length === 0) return 0;
+
+    const firstDayIso = dateRange[0]?.iso;
+    const firstOffsetDays = firstDayIso
+      ? calendarDaysBetween(firstDayIso, laneScheduled[0].startDate)
+      : 0;
+
+    let cumulative = Math.max(0, firstOffsetDays) * DAY_WIDTH;
+
+    for (let i = 0; i < laneScheduled.length; i++) {
+      const width = getProjectPixelWidth(laneScheduled[i]);
+      if (pointerX < cumulative + width / 2) {
+        return i;
+      }
+      cumulative += width;
+    }
+
+    return laneScheduled.length;
+  }
 
   // ---------------------------------------------------------------------------
   // ОБРОБНИКИ ДЛЯ ПРОЄКТІВ
@@ -186,20 +293,35 @@ export function GanttBoard() {
     if (!activeProj) return;
 
     const overId = over.id as string;
-    let targetCrewId = activeProj.crewId;
-    let targetIndex = 0;
 
+    // 1. Визначаємо ЛИШЕ цільову бригаду — байдуже, чи "over" це доріжка, чи картка
+    let targetCrewId = activeProj.crewId;
     if (overId.startsWith("lane-")) {
       targetCrewId = parseInt(overId.replace("lane-", ""), 10);
-      const laneProjects = projects.filter((p) => p.crewId === targetCrewId);
-      targetIndex = laneProjects.length;
     } else {
       const overProj = projects.find((p) => p.id === overId);
       if (overProj) {
         targetCrewId = overProj.crewId;
-        const laneProjects = projects.filter((p) => p.crewId === targetCrewId);
-        targetIndex = laneProjects.findIndex((p) => p.id === overId);
       }
+    }
+
+    // 2. Індекс рахуємо ЗАВЖДИ за реальною піксельною позицією курсора
+    //    відносно лівого краю ЦІЛЬОВОЇ доріжки — уніфіковано для всіх випадків
+    const activeRect = active.rect.current.translated;
+    const laneEl = laneRefs.current[targetCrewId];
+
+    let targetIndex: number;
+    if (activeRect && laneEl) {
+      const laneRect = laneEl.getBoundingClientRect();
+      const pointerX = activeRect.left + activeRect.width / 2 - laneRect.left;
+      targetIndex = computeDropIndex(
+        targetCrewId,
+        pointerX,
+        active.id as string
+      );
+    } else {
+      const laneProjects = projects.filter((p) => p.crewId === targetCrewId);
+      targetIndex = laneProjects.length;
     }
 
     updateProjects((prev) => {
@@ -266,6 +388,7 @@ export function GanttBoard() {
       {/* ДОШКА ГАНТТА */}
       <DndContext
         sensors={sensors}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -337,9 +460,10 @@ export function GanttBoard() {
             <div
               className="flex-1 overflow-x-auto cursor-grab active:cursor-grabbing select-none"
               onPointerDown={(e) => {
+                const target = e.target as HTMLElement;
                 if (
-                  (e.target as HTMLElement).closest(".no-dnd") ||
-                  (e.target as HTMLElement).closest("[role='button']") ||
+                  target.closest(".no-dnd") ||
+                  target.closest("[role='button']") ||
                   e.button !== 0
                 )
                   return;
@@ -388,7 +512,7 @@ export function GanttBoard() {
                   ))}
                 </div>
 
-                {/* Доріжки проєктів праворуч */}
+                {/* Доріжки проєктів праворуч — droppable-зони з реєстрацією рефів */}
                 <div className="divide-y divide-grid">
                   {crews.map((crew) => {
                     const crewProjects = scheduled.filter(
@@ -396,10 +520,11 @@ export function GanttBoard() {
                     );
 
                     return (
-                      <div
+                      <Lane
                         key={crew.id}
-                        id={`lane-${crew.id}`}
-                        className="flex items-center h-[96px] relative"
+                        crewId={crew.id}
+                        totalWidth={totalTimelineWidth}
+                        registerRef={registerLaneRef}
                       >
                         <SortableContext
                           items={crewProjects.map((p) => p.id)}
@@ -446,7 +571,7 @@ export function GanttBoard() {
                             );
                           })}
                         </SortableContext>
-                      </div>
+                      </Lane>
                     );
                   })}
                 </div>

@@ -32,12 +32,10 @@ export function ProjectCard({
   const pauseDays = project.pauseDays || 0;
   const pauseWidth = pauseDays * dayWidth;
 
-  // Генеруємо масив днів для розбивки плашки проєкту та виділення неділі
   const days: { iso: string; isSunday: boolean }[] = [];
   const curr = new Date(project.startDate);
   const end = new Date(project.endDate);
 
-  // Використовуємо <=, щоб для 1 дня цикл спрацював хоча б 1 раз
   while (curr <= end) {
     days.push({
       iso: curr.toISOString().split("T")[0],
@@ -46,7 +44,6 @@ export function ProjectCard({
     curr.setDate(curr.getDate() + 1);
   }
 
-  // Гарантуємо мінімальну ширину у 1 повну клітинку для 1 дня
   const initialCardWidth = Math.max(dayWidth, days.length * dayWidth);
 
   const style = {
@@ -69,7 +66,7 @@ export function ProjectCard({
     function onPointerMove(moveEvent: PointerEvent) {
       moveEvent.stopPropagation();
       const deltaX = moveEvent.clientX - startX;
-      
+
       const dayDelta = Math.floor((deltaX + dayWidth / 2) / dayWidth);
       const nextDays = Math.max(1, initialDays + dayDelta);
       const targetWidth = nextDays * dayWidth;
@@ -138,6 +135,7 @@ export function ProjectCard({
       </div>
 
       {/* ОСНОВНА КАРТКА ПРОЄКТУ */}
+      {/* ⬇️ ДОДАНО КЛАС "no-dnd", ЩОБ БАТЬКІВСЬКИЙ PAN-SCROLL НЕ ПЕРЕХОПЛЮВАВ ПОДІЮ */}
       <div
         ref={cardRef}
         {...attributes}
@@ -153,9 +151,9 @@ export function ProjectCard({
           width: `${initialCardWidth}px`,
           backgroundColor: project.color,
         }}
-        className={`relative flex h-10 items-center justify-between rounded-l-md ${
+        className={`no-dnd relative flex h-10 items-center justify-between rounded-l-md ${
           pauseDays > 0 ? "rounded-r-none" : "rounded-r-md"
-        } text-xs font-medium text-ink shadow-sm transition-colors hover:brightness-105 active:cursor-grabbing shrink-0 overflow-hidden`}
+        } text-xs font-medium text-ink shadow-sm transition-colors hover:brightness-105 active:cursor-grabbing shrink-0 overflow-hidden touch-none`}
       >
         {/* ФОНОВІ БЛОКИ ДНІВ З ВИДІЛЕННЯМ НЕДІЛІ (ВИХ) */}
         <div className="absolute inset-0 flex pointer-events-none z-0">
@@ -186,7 +184,6 @@ export function ProjectCard({
           )}
         </div>
 
-        {/* ПУСТИЙ ВМІСТ КАРТКИ */}
         <div className="relative z-10 w-full pointer-events-none" />
 
         {/* ↔ ЗОНА РЕСАЙЗУ */}
